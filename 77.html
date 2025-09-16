@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Phone</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+            margin: 0;
+            font-family: 'MyCustomFont',-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            @font-face {
+    font-family: 'MyCustomFont'; /* ⚠️ 自訂字體名稱 */
+    src: url('fonts/my-font.ttf') format('truetype'); /* ⚠️ 替換為你的檔案路徑和名稱 */
+    font-weight: normal;
+    font-style: normal;
+        }
+
+        .phone-container {
+            background-color: #FFFFFF;
+            border: 4px solid black;
+            border-radius: 24px;
+            width: 256px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .phone-button {
+            position: absolute;
+            background-color: black;
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        .volume-up { width: 6px; height: 28px; left: -6px; top: 100px; }
+        .volume-down { width: 6px; height: 28px; left: -6px; top: 135px; }
+        .power-button { width: 6px; height: 45px; right: -6px; top: 110px; }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            position: relative;
+            color: #B5D9DC;
+            z-index: 5;
+            height: 22px; /* Explicit height for layout calculation */
+            box-sizing: border-box;
+        }
+
+        .status-bar-time { font-size: 10px; }
+        .status-bar-notch { position: absolute; left: 50%; transform: translateX(-50%); font-size: 14px; }
+        .status-bar-icons { display: flex; gap: 4px; align-items: center; position: absolute; right: 30px; }
+        .icon-small { width: 14px; height: 14px; }
+        .battery-container { position: relative; }
+        .battery-fill { fill: currentColor; transition: width 0.3s ease; }
+        .battery-percentage { position: absolute; top: 50%; right: -22px; font-size: 8px; transform: translateY(-45%); }
+
+        .home-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .app-grid {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            flex-grow: 1;
+        }
+
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .app-icon img { width: 40px; height: 40px; border-radius: 10px; }
+        .app-icon-label {
+            font-size: 10px;
+            margin-top: 4px;
+            color: #B5D9DC;
+        }
+
+        .notes-icon { position: absolute; top: 67px; left: 121px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .notes-icon img { width: 40px; height: 40px; border-radius: 10px; }
+        .settings-icon { position: absolute; top: 67px; left: 181px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .settings-icon img { width: 40px; height: 40px; border-radius: 10px; }
+
+        .widget {
+            grid-column: span 2;
+            grid-row: span 2;
+            width: calc(47px * 2 + 12px); 
+            height: calc(47px * 2 + 12px); 
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .widget-title { font-size: 8px; color: #B5D9DC; margin-bottom: 5px; transform: translateY(-20px); }
+        .widget-countdown { font-size: 20px; color: #B5D9DC; line-height: 1; transform: translateY(-20px); }
+
+        .center-widget-container {
+            position: absolute;
+            top: 155px; left: 16px; width: 224px; height: 80px;
+            border-radius: 15px;
+            background-color: rgba(255, 255, 255, 0.75); 
+            display: flex; justify-content: center; align-items: center;
+            box-sizing: border-box; overflow: hidden;
+        }
+        .center-widget-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 15px; }
+
+        .new-widget-container {
+            position: absolute;
+            bottom: 110px; right: 12px; width: 115px;
+            border-radius: 15px; display: flex; flex-direction: column;
+            justify-content: space-around; align-items: center;
+            padding: 8px; box-sizing: border-box;
+            font-size: 9px;
+        }
+
+        .message-bubble {
+            display: flex; align-items: center;
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 18px; padding: 5px 10px; width: 100%;
+            box-sizing: border-box; color: #B5D9DC; font-size: 9px; margin: 4px 0;
+        }
+        .message-bubble.top, .message-bubble.bottom { justify-content: center; }
+        .message-bubble img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin: 0 4px; }
+        .message-bubble span { white-space: nowrap; }
+
+        .dock {
+            display: flex; justify-content: flex-start; align-items: center;
+            width: calc(100% - 32px); height: 60px;
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 18px; padding: 0 10px; margin-bottom: 8px;
+            align-self: center; gap: 20px;
+        }
+        .dock .app-icon { position: relative; height: 100%; width: 40px; }
+        .dock .app-icon img { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        .bottom-left-apps {
+            position: absolute; bottom: 90px; left: 16px;
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 12px; width: calc(40px * 2 + 12px);
+        }
+
+        /* --- Cute Theme App Screen Styles --- */
+        .theme-app-screen {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            background-color: #fdf5f8;
+            box-sizing: border-box;
+            color: #a87f8b;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4; 
+            padding-top: 22px; 
+        }
+        .theme-app-header {
+            padding: 0 16px 10px 16px; /* MODIFIED: Adjusted padding */
+            text-align: center;
+            position: relative;
+        }
+        .back-button {
+            cursor: pointer; font-size: 12px; color: #e7759c;
+            font-weight: 500; position: absolute; left: 16px; 
+            top: 3px; /* MODIFIED: Moved further up */
+        }
+        .theme-app-header h2 {
+            font-size: 18px; font-weight: 600; margin: 0;
+            padding-top: 0; 
+            color: #d16d8e;
+        }
+        .theme-app-content {
+            padding: 0 16px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .theme-option {
+            margin-bottom: 15px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 5px rgba(220, 190, 200, 0.4);
+        }
+        .theme-option label {
+            display: block; font-size: 12px; font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .theme-option textarea, .theme-option select {
+            width: 100%;
+            border-radius: 8px; border: 1px solid #fce4ec;
+            background-color: #fff8fa; color: #a87f8b;
+            font-size: 10px; padding: 8px; box-sizing: border-box;
+        }
+        .theme-option textarea { height: 45px; resize: none; }
+        .theme-option select {
+            margin-bottom: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23d16d8e' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 12px;
+        }
+        .theme-option textarea::placeholder { color: #d6b5be; }
+        .theme-option input[type="file"] {
+            font-size: 10px; margin-top: 8px; color: #a87f8b;
+        }
+        .theme-app-footer {
+            padding: 12px;
+            text-align: center;
+        }
+        .save-button {
+            background-image: linear-gradient(to right, #ffafcc, #ff8fab);
+            border: none; border-radius: 20px;
+            color: white; font-size: 14px; font-weight: bold;
+            padding: 9px 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(230, 130, 160, 0.3);
+            transition: transform 0.2s ease;
+        }
+        .save-button:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- Save Pop-up --- */
+        .save-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .save-popup.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-container" id="phone-container">
+    <div class="phone-button volume-up"></div>
+    <div class="phone-button volume-down"></div>
+    <div class="phone-button power-button"></div>
+
+    <div class="status-bar">
+        <span class="status-bar-time" id="real-time">00:00</span>
+        <span class="status-bar-notch">˶ᗜ ▵ ᗜ˶</span>
+        <div class="status-bar-icons">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-small"><line x1="12" y1="20" x2="12" y2="10" /><line x1="6" y1="20" x2="6" y2="16" /><line x1="18" y1="20" x2="18" y2="4" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-small"><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 8.65a16 16 0 0 1 21.16 0" /><path d="M8.53 16.14a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12" y2="20" /></svg>
+            <div class="battery-container">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-small" style="transform: translateY(2px);"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" /><path d="M23 13v-2" /><rect id="battery-fill-rect" x="2.5" y="7.5" width="15" height="9" fill="currentColor" rx="1" ry="1"/></svg>
+                <span class="battery-percentage" id="battery-level"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="home-screen" id="home-screen">
+        <div class="app-grid">
+            <div class="widget" id="countdown-widget" style="background-image: url('data:image/png;base64,[在這裡貼上你的小組件背景 Base64 編碼]');">
+                <span class="widget-title">和寶寶已經</span>
+                <span class="widget-countdown" id="countdown-days"></span>
+            </div>
+            <div class="app-icon"><img id="music-icon" src="data:image/png;base64,[在這裡貼上你的音樂 Base64 編碼]" alt="音樂" /><span class="app-icon-label">音樂</span></div>
+            <div class="app-icon"><img id="mail-icon" src="data:image/png;base64,[在這裡貼上你的信箱 Base64 編碼]" alt="信箱" /><span class="app-icon-label">信箱</span></div>
+            <div class="notes-icon"><img id="notes-icon" src="data:image/png;base64,[在這裡貼上你的備忘錄 Base64 編碼]" alt="備忘錄" /><span class="app-icon-label">備忘錄</span></div>
+            <div class="settings-icon"><img id="settings-icon" src="data:image/png;base64,[在這裡貼上你的設定 Base64 編碼]" alt="設定" /><span class="app-icon-label">設定</span></div>
+        </div>
+
+        <div class="center-widget-container"><img id="photo-widget" src="data:image/jpeg;base64,[在這裡貼上你的照片 Base64 編碼]" alt="新增照片小組件"></div>
+
+        <div class="new-widget-container">
+            <div class="message-bubble top"><span>刻薄狐狸。</span><img id="avatar1-icon" src="data:image/png;base64,[在這裡貼上你的頭像1 Base64 編碼]" alt="頭像1"></div>
+            <div class="message-bubble bottom"><img id="avatar2-icon" src="data:image/png;base64,[在這裡貼上你的頭像2 Base64 編碼]" alt="頭像2"><span>笨鳥騙子。</span></div>
+        </div>
+
+        <div class="bottom-left-apps">
+            <div class="app-icon"><img id="diary-icon" src="data:image/png;base64,[在這裡貼上你的日記 Base64 編碼]" alt="日記"><span class="app-icon-label">日記</span></div>
+            <div class="app-icon" id="theme-app-icon"><img id="theme-icon" src="data:image/png;base64,[在這裡貼上你的主題 Base64 編碼]" alt="主題"><span class="app-icon-label">主題</span></div>
+            <div class="app-icon"><img id="weather-icon" src="data:image/png;base64,[在這裡貼上你的天氣 Base64 編碼]" alt="天氣"><span class="app-icon-label">天氣</span></div>
+            <div class="app-icon"><img id="maps-icon" src="data:image/png;base64,[在這裡貼上你的地圖 Base64 編碼]" alt="地圖"><span class="app-icon-label">地圖</span></div>
+        </div>
+
+        <div class="dock">
+            <div class="app-icon"><img id="wechat-icon" src="data:image/png;base64,[在這裡貼上你的微信 Base64 編碼]" alt="微信" /></div>
+            <div class="app-icon"><img id="shopping-icon" src="data:image/png;base64,[在這裡貼上你的購物清單 Base64 編碼]" alt="購物清單" /></div>
+            <div class="app-icon"><img id="budget-icon" src="data:image/png;base64,[在這裡貼上你的記帳 Base64 編碼]" alt="記帳" /></div>
+            <div class="app-icon"><img id="photos-icon" src="data:image/png;base64,[在這裡貼上你的相簿 Base64 編碼]" alt="相簿" /></div>
+        </div>
+    </div>
+    
+    <div id="theme-app-screen" class="theme-app-screen">
+        <div class="theme-app-header">
+            <span id="back-to-home" class="back-button">&lt; 返回</span>
+            <h2>主題美化</h2>
+        </div>
+        <div class="theme-app-content">
+            <div class="theme-option">
+                <label>✨ 更換手機桌布</label>
+                <textarea id="wallpaper-input" placeholder="貼上圖片 Base64 代碼"></textarea>
+                <input id="wallpaper-file" type="file" accept="image/*">
+            </div>
+            <div class="theme-option">
+                <label>🎨 更換軟體/小組件圖標</label>
+                <select id="app-selector" class="app-selector">
+                    <option value="">-- 請選擇一個項目 --</option>
+                    <optgroup label="桌面軟體">
+                        <option value="music-icon">音樂</option>
+                        <option value="mail-icon">信箱</option>
+                        <option value="notes-icon">備忘錄</option>
+                        <option value="settings-icon">設定</option>
+                        <option value="diary-icon">日記</option>
+                        <option value="theme-icon">主題</option>
+                        <option value="weather-icon">天氣</option>
+                        <option value="maps-icon">地圖</option>
+                    </optgroup>
+                    <optgroup label="Dock 軟體">
+                        <option value="wechat-icon">微信</option>
+                        <option value="shopping-icon">購物清單</option>
+                        <option value="budget-icon">記帳</option>
+                        <option value="photos-icon">相簿</option>
+                    </optgroup>
+                    <optgroup label="小組件">
+                        <option value="countdown-widget">倒數計時小組件 (背景)</option>
+                        <option value="photo-widget">照片小組件</option>
+                        <option value="avatar1-icon">訊息頭像1</option>
+                        <option value="avatar2-icon">訊息頭像2</option>
+                    </optgroup>
+                </select>
+                <textarea id="icon-input" placeholder="選擇後貼上圖片 Base64 代碼"></textarea>
+                <input id="icon-file" type="file" accept="image/*">
+            </div>
+            <div class="theme-option">
+                <label>💬 更改訊息氣泡 (CSS)</label>
+                <textarea id="css-input" placeholder=".message-bubble { background-color: #e0f7fa; color: #00796b; }"></textarea>
+            </div>
+        </div>
+        <div class="theme-app-footer">
+            <button id="save-theme-button" class="save-button">保 存</button>
+        </div>
+    </div>
+    
+    <div id="save-popup" class="save-popup">保存成功！</div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Basic Phone Logic (Time, Battery, Countdown) ---
+    const timeElement = document.getElementById('real-time');
+    const batteryElement = document.getElementById('battery-level');
+    const batteryFill = document.getElementById('battery-fill-rect');
+    const countdownElement = document.getElementById('countdown-days');
+    const startDate = new Date('2023-06-16T00:00:00');
+
+    function updateTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        timeElement.textContent = `${hours}:${minutes}`;
+    }
+
+    function updateBattery(battery) {
+        if (battery) {
+            const level = Math.round(battery.level * 100);
+            batteryElement.textContent = `${level}%`;
+            const newWidth = 15 * battery.level;
+            batteryFill.style.width = `${newWidth}px`;
+        }
+    }
+
+    function updateCountdown() {
+        const now = new Date();
+        const diffTime = Math.abs(now - startDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        countdownElement.textContent = diffDays + 1;
+    }
+
+    if ('getBattery' in navigator) {
+        navigator.getBattery().then(battery => {
+            updateBattery(battery);
+            battery.addEventListener('levelchange', () => updateBattery(battery));
+        });
+    }
+
+    updateTime();
+    setInterval(updateTime, 60000);
+    updateCountdown();
+    setInterval(updateCountdown, 86400000);
+
+    // --- App Navigation Logic ---
+    const homeScreen = document.getElementById('home-screen');
+    const themeAppScreen = document.getElementById('theme-app-screen');
+    const themeAppIcon = document.getElementById('theme-app-icon');
+    const backToHomeButton = document.getElementById('back-to-home');
+
+    themeAppIcon.addEventListener('click', () => {
+        homeScreen.style.display = 'none';
+        themeAppScreen.style.display = 'flex';
+    });
+
+    backToHomeButton.addEventListener('click', () => {
+        themeAppScreen.style.display = 'none';
+        homeScreen.style.display = 'flex';
+    });
+    
+    // --- Theme App Logic ---
+    const saveButton = document.getElementById('save-theme-button');
+    const savePopup = document.getElementById('save-popup');
+    const phoneContainer = document.getElementById('phone-container');
+    const wallpaperInput = document.getElementById('wallpaper-input');
+    const wallpaperFile = document.getElementById('wallpaper-file');
+    const appSelector = document.getElementById('app-selector');
+    const iconInput = document.getElementById('icon-input');
+    const iconFile = document.getElementById('icon-file');
+    const cssInput = document.getElementById('css-input');
+
+    // Helper to apply saved styles from localStorage
+    const applySavedStyles = () => {
+        const savedWallpaper = localStorage.getItem('phoneWallpaper');
+        if (savedWallpaper) {
+            phoneContainer.style.backgroundImage = `url(${savedWallpaper})`;
+        }
+
+        const savedIcons = JSON.parse(localStorage.getItem('phoneIcons') || '{}');
+        for (const id in savedIcons) {
+            const element = document.getElementById(id);
+            const base64 = savedIcons[id];
+            if (element && base64) {
+                 if (element.tagName.toLowerCase() === 'img') {
+                    element.src = base64;
+                } else {
+                    element.style.backgroundImage = `url(${base64})`;
+                }
+            }
+        }
+
+        const savedCSS = localStorage.getItem('phoneCustomCSS');
+        if (savedCSS) {
+            let styleElement = document.getElementById('custom-bubble-style');
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = 'custom-bubble-style';
+                document.head.appendChild(styleElement);
+            }
+            styleElement.innerHTML = savedCSS;
+        }
+    };
+
+    const handleFileSelect = (event, textareaElement) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            textareaElement.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    wallpaperFile.addEventListener('change', (e) => handleFileSelect(e, wallpaperInput));
+    iconFile.addEventListener('change', (e) => handleFileSelect(e, iconInput));
+
+    saveButton.addEventListener('click', () => {
+        // 1. Save and apply wallpaper
+        const wallpaperBase64 = wallpaperInput.value.trim();
+        if (wallpaperBase64) {
+            localStorage.setItem('phoneWallpaper', wallpaperBase64);
+            phoneContainer.style.backgroundImage = `url(${wallpaperBase64})`;
+        }
+
+        // 2. Save and apply icon/widget image
+        const selectedAppId = appSelector.value;
+        const iconBase64 = iconInput.value.trim();
+        if (selectedAppId && iconBase64) {
+            const savedIcons = JSON.parse(localStorage.getItem('phoneIcons') || '{}');
+            savedIcons[selectedAppId] = iconBase64;
+            localStorage.setItem('phoneIcons', JSON.stringify(savedIcons));
+
+            const elementToChange = document.getElementById(selectedAppId);
+             if (elementToChange) {
+                if (elementToChange.tagName.toLowerCase() === 'img') {
+                    elementToChange.src = iconBase64;
+                } else {
+                    elementToChange.style.backgroundImage = `url(${elementToChange})`;
+                }
+            }
+        }
+        
+        // 3. Save and apply custom CSS
+        const customCSS = cssInput.value.trim();
+        if (customCSS) {
+            localStorage.setItem('phoneCustomCSS', customCSS);
+            let styleElement = document.getElementById('custom-bubble-style');
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = 'custom-bubble-style';
+                document.head.appendChild(styleElement);
+            }
+            styleElement.innerHTML = customCSS;
+        }
+
+        // 4. Show pop-up
+        savePopup.classList.add('show');
+        setTimeout(() => {
+            savePopup.classList.remove('show');
+        }, 2000);
+    });
+
+    // Load saved styles on page load
+    applySavedStyles();
+});
+</script>
+
+</body>
+</html>
